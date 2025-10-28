@@ -29,3 +29,4 @@
 /home/k/Projects/vscode/Computergrafik/Minecraft/Minecraft_Clone/obj/Debug/net8.0/Minecraft_Clone.pdb
 /home/k/Projects/vscode/Computergrafik/Minecraft/Minecraft_Clone/obj/Debug/net8.0/Minecraft_Clone.genruntimeconfig.cache
 /home/k/Projects/vscode/Computergrafik/Minecraft/Minecraft_Clone/obj/Debug/net8.0/ref/Minecraft_Clone.dll
+/home/k/Projects/vscode/Computergrafik/Minecraft/Minecraft_Clone/bin/Debug/net8.0/StbImageSharp.dll
