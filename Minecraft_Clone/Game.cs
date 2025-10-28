@@ -15,29 +15,96 @@ namespace Minecraft_Clone
     internal class Game : GameWindow
     {
 
-        float[] vertices =
+        List<Vector3> vertices = new List<Vector3>()
         {
-            -0.5f, 0.5f, 0f, // top left vertex - 0
-            0.5f, 0.5f, 0f, // top right vertex - 1
-            0.5f, -0.5f, 0f, // bottom right vertex - 2
-            -0.5f, -0.5f, 0f // bottom left vertex - 3
+            // front face
+            new Vector3(-0.5f, 0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, 0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, 0.5f), // bottomleft vert
+            // right face
+            new Vector3(0.5f, 0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(0.5f, -0.5f, 0.5f), // bottomleft vert
+            // back face
+            new Vector3(0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(-0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomleft vert
+            // left face
+            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(-0.5f, 0.5f, 0.5f), // topright vert
+            new Vector3(-0.5f, -0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
+            // top face
+            new Vector3(-0.5f, 0.5f, -0.5f), // topleft vert
+            new Vector3(0.5f, 0.5f, -0.5f), // topright vert
+            new Vector3(0.5f, 0.5f, 0.5f), // bottomright vert
+            new Vector3(-0.5f, 0.5f, 0.5f), // bottomleft vert
+            // bottom face
+            new Vector3(-0.5f, -0.5f, 0.5f), // topleft vert
+            new Vector3(0.5f, -0.5f, 0.5f), // topright vert
+            new Vector3(0.5f, -0.5f, -0.5f), // bottomright vert
+            new Vector3(-0.5f, -0.5f, -0.5f), // bottomleft vert
         };
 
         // goes from 0,0 to 1,1 because flipped
-        float[] texCoords =
+        List<Vector2> texCoords = new List<Vector2>()
         {
-            0f, 1f,
-            1f, 1f,
-            1f, 0f,
-            0f, 0f
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
+
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 0f),
         };
 
         uint[] indices =
         {
+            // first face
             // top triangle
             0, 1, 2,
             // bottom triangle
-            2, 3, 0
+            2, 3, 0,
+
+            4, 5, 6,
+            6, 7, 4,
+
+            8, 9, 10,
+            10, 11, 8,
+
+            12, 13, 14,
+            14, 15, 12,
+
+            16, 17, 18,
+            18, 19, 16,
+
+            20, 21, 22,
+            22, 23, 20
         };
 
         // Render Pipeline  variables
@@ -47,6 +114,9 @@ namespace Minecraft_Clone
         int textureVBO;
         int ebo; // element buffer object, or ibo = index buffer object
         int textureID;
+
+        // Transformation variables
+        float yRot = 0f;
 
 
         int width, height;
@@ -77,7 +147,7 @@ namespace Minecraft_Clone
 
             // bind the vbo, all subsequent buffer operations will affect this buffer
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * Vector3.SizeInBytes, vertices.ToArray(), BufferUsageHint.StaticDraw);
 
             // Put the vertex VBO in slot 0 of our VAO
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0); // specify the layout of the vertex data (3 because we have 3 vertices)
@@ -88,7 +158,7 @@ namespace Minecraft_Clone
 
             textureVBO = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, textureVBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Length * sizeof(float), texCoords, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Count * Vector2.SizeInBytes, texCoords.ToArray(), BufferUsageHint.StaticDraw);
 
             // Put the texture VBO in slot 1 of our VAO
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 0, 0);
@@ -145,6 +215,8 @@ namespace Minecraft_Clone
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, dirtTexture.Width, dirtTexture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, dirtTexture.Data);
             // unbind the texture
             GL.BindTexture(TextureTarget.Texture2D, 0);
+
+            GL.Enable(EnableCap.DepthTest);
         }
 
         protected override void OnUnload()
@@ -162,7 +234,7 @@ namespace Minecraft_Clone
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f); // set color
-            GL.Clear(ClearBufferMask.ColorBufferBit); // apply color
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); // apply color
 
             // draw our triangle
             GL.UseProgram(shaderProgram); // use the shader program
@@ -179,10 +251,10 @@ namespace Minecraft_Clone
             // I definitely gotta learn the theory for this...
             Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60.0f), width / height, 0.1f, 100.0f);
 
-            model = Matrix4.CreateRotationY(45f);
+            model = Matrix4.CreateRotationY(yRot);
+            yRot += 0.0005f;
 
             Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -3f);
-
             model *= translation;
 
             int modelLocation = GL.GetUniformLocation(shaderProgram, "model");
