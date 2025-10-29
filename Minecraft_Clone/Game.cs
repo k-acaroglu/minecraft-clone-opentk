@@ -14,7 +14,6 @@ namespace Minecraft_Clone
 {
     internal class Game : GameWindow
     {
-
         List<Vector3> vertices = new List<Vector3>()
         {
             // front face
@@ -115,6 +114,9 @@ namespace Minecraft_Clone
         int ebo; // element buffer object, or ibo = index buffer object
         int textureID;
 
+        // camera
+        Camera camera;
+
         // Transformation variables
         float yRot = 0f;
 
@@ -125,7 +127,7 @@ namespace Minecraft_Clone
             this.width = width;
             this.height = height;
             // center the window on monitor
-            this.CenterWindow(new Vector2i(width, height));
+            CenterWindow(new Vector2i(width, height));
         }
         protected override void OnResize(ResizeEventArgs e)
         {
@@ -201,7 +203,6 @@ namespace Minecraft_Clone
 
             // Texture parameters is something detailed, you can research on that on your own later
             // It'll take the nearest texture and display it, instead of blurring it
-            // Texture paramaters
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
@@ -217,6 +218,9 @@ namespace Minecraft_Clone
             GL.BindTexture(TextureTarget.Texture2D, 0);
 
             GL.Enable(EnableCap.DepthTest);
+
+            camera = new Camera(width, height, Vector3.Zero);
+            CursorState = CursorState.Grabbed;
         }
 
         protected override void OnUnload()
@@ -246,10 +250,8 @@ namespace Minecraft_Clone
 
             // Transformation matrices (I HAVE TO FUCKING REVIEW LINEAR ALGEBRA FOR THIS SHIT)
             Matrix4 model = Matrix4.Identity;
-            Matrix4 view = Matrix4.Identity;
-
-            // I definitely gotta learn the theory for this...
-            Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(60.0f), width / height, 0.1f, 100.0f);
+            Matrix4 view = camera.GetViewMatrix();
+            Matrix4 projection = camera.GetProjectionMatrix();
 
             model = Matrix4.CreateRotationY(yRot);
             yRot += 0.0005f;
@@ -276,7 +278,11 @@ namespace Minecraft_Clone
 
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
+            MouseState mouse = MouseState;
+            KeyboardState input = KeyboardState;
+
             base.OnUpdateFrame(args);
+            camera.Update(input, mouse, args);
         }
 
         // Shader loading utility function, WHAT THE FUCK DOES THIS DO???

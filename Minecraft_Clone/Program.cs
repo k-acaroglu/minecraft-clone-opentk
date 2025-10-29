@@ -9,6 +9,7 @@
             using (Game game = new Game(500, 500))
             {
                 game.Run();
+                // you have to use "dotnet run --project Minecraft_Clone" to start, running the script doesn't work.
             }
         }
     }
