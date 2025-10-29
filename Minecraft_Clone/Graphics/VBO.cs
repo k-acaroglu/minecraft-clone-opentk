@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Minecraft_Clone
+namespace Minecraft_Clone.Graphics
 {
     internal class VBO
     {
