@@ -62,16 +62,18 @@ namespace Minecraft_Clone.World
                 for (int z = 0; z < SIZE; z++)
                 {
                     int columnHeight = (int)(heightmap[x, z] / 10);
-                    for (int y = 0; y < HEIGHT; y++) 
+                    for (int y = 0; y < HEIGHT; y++)
                     {
-                        if (y < columnHeight)
+                        BlockType type = BlockType.AIR;
+                        if (y < columnHeight - 1)
                         {
-                            chunkBlocks[x, y, z] = new Block(new Vector3(x, y, z), BlockType.DIRT);
+                            type = BlockType.DIRT;
                         }
-                        else
+                        if (y == columnHeight - 1)
                         {
-                            chunkBlocks[x, y, z] = new Block(new Vector3(x, y, z), BlockType.AIR);
+                            type = BlockType.GRASS;
                         }
+                        chunkBlocks[x, y, z] = new Block(new Vector3(x, y, z), type);
                     }
                 }
             }
@@ -82,11 +84,13 @@ namespace Minecraft_Clone.World
             {
                 for ( int z = 0; z < SIZE; z++)
                 {
-                    int columnHeight = (int)(heightmap[x, z] / 10);
-                    for ( int y = 0; y < columnHeight; y++)
+                    for ( int y = 0; y < HEIGHT; y++)
                     {
                         int numFaces = 0;
 
+                        if (chunkBlocks[x,y,z].type != BlockType.AIR)
+                        {
+                            
                         // Left Faces
                         if (x > 0)
                         {
@@ -116,7 +120,7 @@ namespace Minecraft_Clone.World
                         }
                         
                         // Top Faces
-                        if (y < columnHeight-1)
+                        if (y < HEIGHT-1)
                         {
                             if (chunkBlocks[x, y+1, z].type == BlockType.AIR)
                             {
@@ -172,6 +176,7 @@ namespace Minecraft_Clone.World
                         }
 
                         AddIndices(numFaces);
+                        }
                     }
                 }
             }
@@ -212,7 +217,7 @@ namespace Minecraft_Clone.World
 
             chunkIBO = new IBO(chunkIndices);
 
-            texture = new Texture("dirt_texture.png");
+            texture = new Texture("atlas.png");
         } // take data and process it for rendering
         public void Render(ShaderProgram program) // drawing the chunk
         {
