@@ -9,6 +9,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Minecraft_Clone.Graphics;
 
 namespace Minecraft_Clone
 {
@@ -82,7 +83,7 @@ namespace Minecraft_Clone
             new Vector2(0f, 0f),
         };
 
-        uint[] indices =
+        List<uint > indices = new List<uint>
         {
             // first face
             // top triangle
@@ -107,12 +108,10 @@ namespace Minecraft_Clone
         };
 
         // Render Pipeline  variables
-        int vao; // Vertex Array Object
-        int shaderProgram;
-        int vbo;
-        int textureVBO;
-        int ebo; // element buffer object, or ibo = index buffer object
-        int textureID;
+        VAO vao;
+        IBO ibo;
+        ShaderProgram program;
+        Texture texture;
 
         // camera
         Camera camera;
@@ -140,83 +139,16 @@ namespace Minecraft_Clone
         protected override void OnLoad()
         {
             base.OnLoad();
-            vao = (GL.GenVertexArray()); // generate vertex array object, which is empty when created
-            GL.BindVertexArray(vao);
+            vao = new VAO();
 
-            // ------- VERTICES VBO -----------
+            VBO vbo = new VBO(vertices);
+            vao.LinkToVAO(0, 3, vbo);
+            VBO uvVBO = new VBO(texCoords);
+            vao.LinkToVAO(1, 2, uvVBO);
 
-            vbo = GL.GenBuffer(); // generate vertex buffer object
-
-            // bind the vbo, all subsequent buffer operations will affect this buffer
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * Vector3.SizeInBytes, vertices.ToArray(), BufferUsageHint.StaticDraw);
-
-            // Put the vertex VBO in slot 0 of our VAO
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0); // specify the layout of the vertex data (3 because we have 3 vertices)
-            GL.EnableVertexArrayAttrib(vao, 0); // enable the vertex attribute at slot 0
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-            // --------- TEXTURE VBO ------------
-
-            textureVBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, textureVBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Count * Vector2.SizeInBytes, texCoords.ToArray(), BufferUsageHint.StaticDraw);
-
-            // Put the texture VBO in slot 1 of our VAO
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 0, 0);
-            GL.EnableVertexArrayAttrib(vao, 1);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0); // unbind the VBO
-            GL.BindVertexArray(0); // unbind the VAO
-
-            // bind the ebo
-            ebo = GL.GenBuffer(); // generate the element buffer object
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw); // uint cuz we want the size of data in memory
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-
-            // Create the shader program
-            shaderProgram = GL.CreateProgram(); // create empty shader program
-
-            int vertexShader = GL.CreateShader(ShaderType.VertexShader); // create vertex shader
-            GL.ShaderSource(vertexShader, LoadShaderSource("Default.vert")); // load shader source code
-            GL.CompileShader(vertexShader);
-
-            int fragmentShader = GL.CreateShader(ShaderType.FragmentShader); // create fragment shader
-            GL.ShaderSource(fragmentShader, LoadShaderSource("Default.frag")); // load shader source code
-            GL.CompileShader(fragmentShader);
-
-            GL.AttachShader(shaderProgram, vertexShader); // attach vertex shader to program
-            GL.AttachShader(shaderProgram, fragmentShader); // attach fragment shader to program
-            GL.LinkProgram(shaderProgram); // link the shader program
-
-            // delete the shaders 
-            GL.DeleteShader(vertexShader);
-            GL.DeleteShader(fragmentShader);
-
-            // ------------- TEXTURES -------------
-            textureID = GL.GenTexture();
-
-            // activate the texutre in the unit
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, textureID);
-
-            // Texture parameters is something detailed, you can research on that on your own later
-            // It'll take the nearest texture and display it, instead of blurring it
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            
-            // Load image
-            // STB uses inverted coordinates
-            StbImage.stbi_set_flip_vertically_on_load(1); // now won't have to flip coordinates every time
-            ImageResult dirtTexture = ImageResult.FromStream(File.OpenRead("Minecraft_Clone/Textures/dirt_texture.png"), ColorComponents.RedGreenBlueAlpha);  
-            
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, dirtTexture.Width, dirtTexture.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, dirtTexture.Data);
-            // unbind the texture
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-
+            ibo = new IBO(indices);
+            program = new ShaderProgram("Default.vert", "Default.frag");
+            texture = new Texture("dirt_texture.png");
             GL.Enable(EnableCap.DepthTest);
 
             camera = new Camera(width, height, Vector3.Zero);
@@ -226,13 +158,12 @@ namespace Minecraft_Clone
         protected override void OnUnload()
         {
             base.OnUnload();
+            
+            vao.Delete();
+            ibo.Delete();
+            texture.Delete();
+            program.Delete();
 
-            // cleanup
-            GL.DeleteVertexArray(vao);
-            GL.DeleteBuffer(vbo);
-            GL.DeleteBuffer(ebo);
-            GL.DeleteTexture(textureID);
-            GL.DeleteProgram(shaderProgram);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -240,13 +171,10 @@ namespace Minecraft_Clone
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f); // set color
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit); // apply color
 
-            // draw our triangle
-            GL.UseProgram(shaderProgram); // use the shader program
-            GL.BindVertexArray(vao); // bind the VAO to our current context
-
-            GL.BindTexture(TextureTarget.Texture2D, textureID);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+            program.Bind();
+            vao.Bind();
+            ibo.Bind();
+            texture.Bind(); 
 
             // Transformation matrices (I HAVE TO FUCKING REVIEW LINEAR ALGEBRA FOR THIS SHIT)
             Matrix4 model = Matrix4.Identity;
@@ -259,16 +187,20 @@ namespace Minecraft_Clone
             Matrix4 translation = Matrix4.CreateTranslation(0f, 0f, -3f);
             model *= translation;
 
-            int modelLocation = GL.GetUniformLocation(shaderProgram, "model");
-            int viewLocation = GL.GetUniformLocation(shaderProgram, "view");
-            int projectionLocation = GL.GetUniformLocation(shaderProgram, "projection");
+            int modelLocation = GL.GetUniformLocation(program.ID, "model");
+            int viewLocation = GL.GetUniformLocation(program.ID, "view");
+            int projectionLocation = GL.GetUniformLocation(program.ID, "projection");
 
             GL.UniformMatrix4(modelLocation, true, ref model);
             GL.UniformMatrix4(viewLocation, true, ref view);
             GL.UniformMatrix4(projectionLocation, true, ref projection);
 
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
             // GL.DrawArrays(PrimitiveType.Triangles, 0, 3); // draw the triangle
+
+            model += Matrix4.CreateTranslation(new Vector3(2f, 0f, 0f));
+            GL.UniformMatrix4(modelLocation, true, ref model);
+            GL.DrawElements(PrimitiveType.Triangles, indices.Count, DrawElementsType.UnsignedInt, 0);
 
             Context.SwapBuffers(); // there are 2 windows - 
             // the one being rendered and the one being displayed, this swaps them
@@ -283,26 +215,6 @@ namespace Minecraft_Clone
 
             base.OnUpdateFrame(args);
             camera.Update(input, mouse, args);
-        }
-
-        // Shader loading utility function, WHAT THE FUCK DOES THIS DO???
-        public static string LoadShaderSource(string filePath)
-        {
-            string shaderSource = "";
-
-            try
-            {
-                using (StreamReader reader = new StreamReader("Minecraft_Clone/Shaders/" + filePath))
-                {
-                    shaderSource = reader.ReadToEnd();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Failed to load shader source file: " + e.Message);
-            }
-
-            return shaderSource;
         }
     }
 }
